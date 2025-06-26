@@ -1,0 +1,81 @@
+- route:
+    id: route-6964
+    from:
+      id: from-2213
+      uri: vertx-websocket
+      parameters:
+        fireWebSocketConnectionEvents: true
+        host: localhost
+        path: chat
+        port: "8080"
+      steps:
+        - choice:
+            id: choice-4040
+            when:
+              - id: when-5152
+                steps:
+                  - log:
+                      id: log-1750
+                      message: New chat is open
+                  - setBody:
+                      id: setBody-2044
+                      expression:
+                        simple:
+                          expression: Hello, How can i help you?
+                  - to:
+                      id: to-2388
+                      uri: vertx-websocket
+                      parameters:
+                        host: localhost
+                        path: chat
+                        port: "8080"
+                        sendToAll: true
+                expression:
+                  simple:
+                    expression: ${header.CamelVertxWebsocket.event} == 'OPEN'
+              - id: when-2277
+                steps:
+                  - log:
+                      id: log-1804
+                      message: "New Message from user: ${body} "
+                  - process:
+                      id: process-2075
+                      ref: createChatMessage
+                  - to:
+                      id: to-3801
+                      uri: langchain4j-chat
+                      parameters:
+                        chatId: myllm
+                        chatOperation: CHAT_MULTIPLE_MESSAGES
+                  - to:
+                      id: to-3366
+                      uri: vertx-websocket
+                      parameters:
+                        host: localhost
+                        path: chat
+                        port: "8080"
+                        sendToAll: true
+                expression:
+                  simple:
+                    expression: ${header.CamelVertxWebsocket.event} == 'MESSAGE'
+              - id: when-1169
+                steps:
+                  - log:
+                      id: log-1450
+                      message: Session from user has been closed
+                  - setBody:
+                      id: setBody-1027
+                      expression:
+                        simple:
+                          expression: See you soon!
+                  - to:
+                      id: to-3382
+                      uri: vertx-websocket
+                      parameters:
+                        host: localhost
+                        path: chat
+                        port: "8080"
+                        sendToAll: true
+                expression:
+                  simple:
+                    expression: ${header.CamelVertxWebsocket.event} == 'CLOSE'
